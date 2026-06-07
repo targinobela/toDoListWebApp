@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>To Do List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F2EC;
+    --surface: #FDFCF8;
+    --text: #1A1714;
+    --text-muted: #7A7265;
+    --accent: #C4552A;
+    --accent-soft: #FAECE7;
+    --border: rgba(26,23,20,0.12);
+    --border-hover: rgba(26,23,20,0.25);
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+    --shadow-lg: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    background: var(--text);
+    color: #F5F2EC;
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    border: 40px solid rgba(245,242,236,0.06);
+    border-radius: 50%;
+  }
+
+  .page-header::after {
+    content: '';
+    position: absolute;
+    right: 60px;
+    top: 20px;
+    width: 80px;
+    height: 80px;
+    border: 20px solid rgba(196,85,42,0.25);
+    border-radius: 50%;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.1;
+    color: #F5F2EC;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-title em {
+    font-style: italic;
+    color: rgba(245,242,236,0.55);
+  }
+
+  .header-stats {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #F5F2EC;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: rgba(245,242,236,0.45);
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: rgba(245,242,236,0.15);
+    align-self: stretch;
+  }
+
+  .main {
+    padding: 1.5rem 1rem 4rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .add-section {
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .add-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .task-input {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    caret-color: var(--accent);
+  }
+
+  .task-input::placeholder { color: var(--text-muted); }
+
+  .task-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(196,85,42,0.12);
+  }
+
+  .btn-add {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #F5F2EC;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover { opacity: 0.88; }
+  .btn-add:active { transform: scale(0.97); }
+
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    padding: 0.5rem 0 1rem;
+  }
+
+  .filter-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active {
+    background: var(--text);
+    color: #F5F2EC;
+    border-color: var(--text);
+  }
+
+  .filter-btn:not(.active):hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s, opacity 0.2s;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-item:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover);
+  }
+
+  .task-item.done {
+    opacity: 0.55;
+  }
+
+  .task-item.done .task-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .checkbox-wrap {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-hover);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: transparent;
+  }
+
+  .checkbox:hover { border-color: var(--accent); }
+
+  .task-item.done .checkbox {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  .checkmark {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .task-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-index {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+
+  .task-text {
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
+    color: var(--text);
+    transition: color 0.15s;
+  }
+
+  .task-edit-input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--accent);
+    border-radius: 6px;
+    padding: 4px 8px;
+    width: 100%;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(196,85,42,0.12);
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .icon-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .icon-btn.danger:hover {
+    background: #FAECE7;
+    color: var(--accent);
+  }
+
+  .icon-btn.confirm:hover {
+    background: var(--green-bg);
+    color: var(--green);
+  }
+
+  .icon-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.35;
+  }
+
+  .empty-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    color: var(--text);
+    opacity: 0.4;
+    margin-bottom: 0.25rem;
+  }
+
+  .empty-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .clear-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+
+  .btn-clear {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-clear:hover {
+    background: #FAECE7;
+    color: var(--accent);
+    border-color: rgba(196,85,42,0.3);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: #F5F2EC;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 480px) {
+    .page-header { padding: 2rem 1.25rem 1.75rem; }
+    .main { padding: 1.25rem 0.75rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-label">Gerenciador de tarefas</div>
+  <h1 class="header-title">To <em>Do</em><br>List</h1>
+  <div class="header-stats">
+    <div class="stat">
+      <span class="stat-num" id="stat-total">0</span>
+      <span class="stat-label">total</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num" id="stat-done">0</span>
+      <span class="stat-label">concluídas</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num" id="stat-pending">0</span>
+      <span class="stat-label">pendentes</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <div class="add-section">
+    <div class="add-row">
+      <input class="task-input" id="task-input" type="text" placeholder="Adicionar nova tarefa..." maxlength="200" />
+      <button class="btn-add" onclick="addTask()">+ Adicionar</button>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">Todas</button>
+    <button class="filter-btn" id="filter-pending" onclick="setFilter('pending')">Pendentes</button>
+    <button class="filter-btn" id="filter-done" onclick="setFilter('done')">Concluídas</button>
+  </div>
+
+  <div class="tasks-container" id="tasks-container"></div>
+
+  <div class="clear-row" id="clear-row" style="display:none">
+    <button class="btn-clear" onclick="clearDone()">Limpar concluídas</button>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let tasks = JSON.parse(localStorage.getItem('tdl-tasks') || '[]');
+  let filter = 'all';
+  let editingId = null;
+
+  function save() {
+    localStorage.setItem('tdl-tasks', JSON.stringify(tasks));
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  function updateStats() {
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pending = total - done;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-pending').textContent = pending;
+    const clearRow = document.getElementById('clear-row');
+    clearRow.style.display = done > 0 ? 'flex' : 'none';
+  }
+
+  function setFilter(f) {
+    filter = f;
+    ['all','pending','done'].forEach(k => {
+      document.getElementById('filter-' + k).classList.toggle('active', k === f);
+    });
+    render();
+  }
+
+  function render() {
+    const container = document.getElementById('tasks-container');
+    const visible = tasks.filter(t => {
+      if (filter === 'pending') return !t.done;
+      if (filter === 'done') return t.done;
+      return true;
+    });
+
+    if (visible.length === 0) {
+      const msgs = {
+        all: ['Nenhuma tarefa ainda', 'Adicione uma tarefa acima para começar.'],
+        pending: ['Tudo feito!', 'Não há tarefas pendentes.'],
+        done: ['Nada concluído ainda', 'Marque tarefas como feitas para vê-las aqui.']
+      };
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <p class="empty-title">${msgs[filter][0]}</p>
+          <p class="empty-sub">${msgs[filter][1]}</p>
+        </div>`;
+      updateStats();
+      return;
+    }
+
+    container.innerHTML = visible.map((t, vi) => {
+      const realIndex = tasks.indexOf(t);
+      const isEditing = editingId === t.id;
+      return `
+      <div class="task-item${t.done ? ' done' : ''}" id="item-${t.id}">
+        <div class="checkbox-wrap">
+          <div class="checkbox" onclick="toggleDone('${t.id}')" title="${t.done ? 'Desmarcar' : 'Concluir'}">
+            <svg class="checkmark" viewBox="0 0 12 12"><polyline points="1.5,6 5,9.5 10.5,2.5"/></svg>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="task-index">#${String(realIndex + 1).padStart(2,'0')}</div>
+          ${isEditing
+            ? `<input class="task-edit-input" id="edit-input-${t.id}" value="${escHtml(t.text)}" onkeydown="editKeyDown(event,'${t.id}')" />`
+            : `<div class="task-text">${escHtml(t.text)}</div>`
+          }
+        </div>
+        <div class="task-actions">
+          ${isEditing ? `
+            <button class="icon-btn confirm" onclick="saveEdit('${t.id}')" title="Salvar">
+              <svg viewBox="0 0 16 16"><polyline points="2,8 6,12 14,4"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="cancelEdit()" title="Cancelar">
+              <svg viewBox="0 0 16 16"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+            </button>
+          ` : `
+            <button class="icon-btn" onclick="startEdit('${t.id}')" title="Editar" ${t.done ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>
+              <svg viewBox="0 0 16 16"><path d="M11.5 2.5a2 2 0 0 1 2 2L6 12l-3.5 1 1-3.5z"/></svg>
+            </button>
+            <button class="icon-btn danger" onclick="removeTask('${t.id}')" title="Remover">
+              <svg viewBox="0 0 16 16"><polyline points="2,4 14,4"/><path d="M6,4V2h4v2"/><path d="M5,4l.7,9h4.6L11,4"/></svg>
+            </button>
+          `}
+        </div>
+      </div>`;
+    }).join('');
+
+    if (editingId) {
+      const inp = document.getElementById('edit-input-' + editingId);
+      if (inp) { inp.focus(); inp.select(); }
+    }
+
+    updateStats();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function addTask() {
+    const inp = document.getElementById('task-input');
+    const text = inp.value.trim();
+    if (!text) { inp.focus(); return; }
+    tasks.push({ id: String(Date.now() + Math.random()), text, done: false });
+    save();
+    inp.value = '';
+    inp.focus();
+    setFilter('all');
+    toast('Tarefa adicionada!');
+  }
+
+  function toggleDone(id) {
+    const t = tasks.find(t => t.id === id);
+    if (!t) return;
+    t.done = !t.done;
+    save();
+    render();
+    toast(t.done ? 'Tarefa concluída ✓' : 'Tarefa reaberta');
+  }
+
+  function startEdit(id) {
+    editingId = id;
+    render();
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    render();
+  }
+
+  function saveEdit(id) {
+    const inp = document.getElementById('edit-input-' + id);
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+    const t = tasks.find(t => t.id === id);
+    if (!t) return;
+    t.text = text;
+    editingId = null;
+    save();
+    render();
+    toast('Tarefa atualizada!');
+  }
+
+  function editKeyDown(e, id) {
+    if (e.key === 'Enter') saveEdit(id);
+    if (e.key === 'Escape') cancelEdit();
+  }
+
+  function removeTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    if (editingId === id) editingId = null;
+    save();
+    render();
+    toast('Tarefa removida.');
+  }
+
+  function clearDone() {
+    tasks = tasks.filter(t => !t.done);
+    save();
+    render();
+    toast('Tarefas concluídas removidas.');
+  }
+
+  document.getElementById('task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  render();
+</script>
+</body>
+</html>
